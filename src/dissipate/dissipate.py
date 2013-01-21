@@ -38,7 +38,8 @@ parser.add_argument('-x',
 
 parser.add_argument('-l',
     action='store_false',
-    help="Use the list file to specify \"exclude section\" or \"include section\"")
+    help='Use the list file to specify '
+                    '"exclude section" or "include section"')
 
 args = parser.parse_args()
 
@@ -49,7 +50,8 @@ class Dissipate:
         # platform.linux_distribution()???
         if os.path.exists('/bin/yum') or os.path.exists('/usr/bin/yum'):
             self.installer = 'yum'
-        elif os.path.exists('/bin/apt-get') or os.path.exists('/usr/bin/apt-get'):
+        elif (os.path.exists('/bin/apt-get') or
+              os.path.exists('/usr/bin/apt-get')):
             self.installer = 'apt-get'
         else:
             print "Unknown package system."
@@ -79,29 +81,40 @@ class Dissipate:
         try:
             os.chown(fname, uid, gid)
         except OverflowError:
-            print "\033[33m" + "Warning: (Overflow) Please check user or group. Skip owner, group settings." + "\033[0m"
+            print("\033[33m" +
+                  "Warning: (Overflow) Please check user or group. "
+                  "Skip owner, group settings." + "\033[0m")
 
         if mode:
             try:
                 os.chmod(fname, mode)
             except (TypeError, OverflowError):
-                print "\033[31m" + "Error: Please check mode value. Use umask value." + "\033[0m"
+                print("\033[31m" +
+                      "Error: Please check mode value. Use umask value."
+                      + "\033[0m")
 
     def do_config(self, config):
         print "\n" + "\033[32m" + "=== Create config section ===" + "\033[0m"
 
         for x in config:
             # Check param: dir, file, template
-            if not config[x].has_key('dir') or not os.path.exists(config[x]['dir']):
-                print "\033[31m" + "Error: (dir) parameter is not defined. or Directory is not exist." + "\033[0m"
+            if (not 'dir' in config[x] or
+                not os.path.exists(config[x]['dir'])):
+                print("\033[31m" +
+                      "Error: (dir) parameter is not defined. "
+                      "or Directory is not exist." + "\033[0m")
                 return 1
 
-            if not config[x].has_key('file'):
-                print "\033[31m" + "Error: (file) parameter is not defined." + "\033[0m"
+            if not 'file' in config[x]:
+                print("\033[31m" +
+                      "Error: (file) parameter is not defined." + "\033[0m")
                 return 1
 
-            if not config[x].has_key('template') or not os.path.exists(config[x]['template']):
-                print "\033[31m" + "Error: (template) parameter is not defined. r Template file is not exist." + "\033[0m"
+            if (not 'template' in config[x] or
+                not os.path.exists(config[x]['template'])):
+                print("\033[31m" +
+                      "Error: (template) parameter is not defined. "
+                      "r Template file is not exist." + "\033[0m")
                 return 1
 
             # テンプレートからファイルを生成
@@ -120,54 +133,61 @@ class Dissipate:
             print "File: " + fpath
             print "Template: " + config[x]['template']
 
-            if config[x].has_key('user'):
+            if 'user' in config[x]:
                 print "User: " + str(config[x]['user'])
 
-            if config[x].has_key('group'):
+            if 'group' in config[x]:
                 print "Group: " + str(config[x]['group'])
 
             # (FIXME) Set mode
-            if config[x].has_key('mode') and re.match(r'[1-7]?[0-7]{3}', str(config[x]['mode'])) is not None:
+            pat = re.compile(r'[1-7]?[0-7]{3}')
+            if ('mode' in config[x] and
+                pat.match(str(config[x]['mode'])) is not None):
                 if len(str(config[x]['mode'])) == 3:
                     work = "0" + str(config[x]['mode'])
                 else:
                     work = str(config[x]['mode'])
 
-                mode = int(work[0]) * 512 + int(work[1]) * 64 + int(work[2]) * 8 + int(work[3])
-                print "Mode: " + oct(mode)
+                mode = (int(work[0]) * 512 +
+                        int(work[1]) * 64 +
+                        int(work[2]) * 8 + int(work[3]))
+                print("Mode: %s" % oct(mode))
             else:
                 mode = None
-                print "Mode: Undefined mode or Invalid mode. Use umask value."
+                print("Mode: Undefined mode or Invalid mode. Use umask value.")
 
             # Set UID
             dinfo = os.stat(config[x]['dir'])
 
-            if config[x].has_key('user'):
+            if 'user' in config[x]:
                 if str(config[x]['user']).isdigit():
                     uid = int(config[x]['user'])
                 else:
                     try:
                         uid = pwd.getpwnam(config[x]['user']).pw_uid
                     except KeyError:
-                        print "\033[33m" + "Warning: User name not found. Use parent directory UID." + "\033[0m"
+                        print("\033[33m" +
+                              "Warning: User name not found. "
+                              "Use parent directory UID." + "\033[0m")
                         uid = dinfo.st_uid
             else:
                 uid = dinfo.st_uid
 
             # Set GID
             dinfo = os.stat(config[x]['dir'])
-            if config[x].has_key('group'):
+            if 'group' in config[x]:
                 if str(config[x]['group']).isdigit():
                     gid = config[x]['group']
                 else:
                     try:
                         gid = grp.getgrnam(config[x]['group']).gr_gid
                     except KeyError:
-                        print "\033[33m" + "Warning: Group name not found. Use parent directory GID." + "\033[0m"
+                        print("\033[33m" +
+                              "Warning: Group name not found. "
+                              "Use parent directory GID." + "\033[0m")
                         gid = dinfo.st_gid
             else:
                 gid = dinfo.st_gid
-
 
             self.set_permission(fpath, uid, gid, mode)
 
@@ -200,8 +220,10 @@ if __name__ == '__main__':
             ok = raw_input("exec?[y/N]: ")
             ok = str(ok).lower() or 'n'
 
-            if ok in ('y', 'ye', 'yes'): break
-            if ok in ('n', 'no'): sys.exit(0)
+            if ok in ('y', 'ye', 'yes'):
+                break
+            if ok in ('n', 'no'):
+                sys.exit(0)
 
     item = []
 
@@ -218,23 +240,37 @@ if __name__ == '__main__':
     for x in item:
         action.do_action(x, policy[x])
 
-# ツールの名前が決まらない。
-# 英語が致命的過ぎて死にたい
-# 例外処理とか変数名とかを正しく
-# OrderedDictつかう?
-# ログ出力
-# do_config()
-# do_check()
-# policy.yaml 内で共通の値を持つものは面倒なので変数したい。
-# policy.yaml の特定セクションを指定するオプション
-  # -i
-# policy.yaml の特定セクションをスキップするオプシヨン
-  # -x
-# セクションの指定と除外の指定にリストファイルを使用するオプション
-  # -l
-# mode の先頭には 0 をつけない運用回避: o: 755, 1755, x: 0755
-  # 0 をつけたものが config[x]['mode'] に入ると10進数として格納される。そのまま os.chmod 渡せばよい。
-  # 0なしの物の場合はそのまま10進数として入る。これをそのまま os.chmod に渡すと8進数として見られるため意図しないパーミッションになる。
-  # 暫定対応として、0で始まらない数値を8進数と見なし、10進数に変換して使用する。[1-7]?[0-7]{3} 意外の値は不正な値として扱う。
-  # config[x]['mode']=755 : work = "0" + "755" => mode = int(work[0]) * 512 + int(work[1]) * 64 + int(work[2]) * 8 + int(work[3]) =  493 (0755)
-  # config[x]['mode']=1755:                    => mode = int(work[0]) * 512 + int(work[1]) * 64 + int(work[2]) * 8 + int(work[3]) = 1005(01755)
+"""
+ツールの名前が決まらない。
+英語が致命的過ぎて死にたい
+例外処理とか変数名とかを正しく
+OrderedDictつかう?
+
+ログ出力
+------
+
+* do_config()
+* do_check()
+
+  * policy.yaml 内で共通の値を持つものは面倒なので変数したい。
+  * policy.yaml の特定セクションを指定するオプション
+   -i
+  * policy.yaml の特定セクションをスキップするオプシヨン
+   -x
+  * セクションの指定と除外の指定にリストファイルを使用するオプション
+   -l
+mode の先頭には 0 をつけない運用回避: o: 755, 1755, x: 0755
+* 0 をつけたものが config[x]['mode'] に入ると10進数として格納される。
+  そのまま os.chmod 渡せばよい。
+* 0 なしの物の場合はそのまま10進数として入る。
+  これをそのまま os.chmod に渡すと8進数として見られるため意図しないパーミッションになる。
+* 暫定対応として、0で始まらない数値を8進数と見なし、10進数に変換して使用する。
+  [1-7]?[0-7]{3} 意外の値は不正な値として扱う。::
+
+   config[x]['mode']=755 : work = "0" + "755" =>
+   mode = (int(work[0]) * 512 + int(work[1]) * 64 +
+           int(work[2]) * 8 + int(work[3])) =  493 (0755)
+   config[x]['mode']=1755:                    =>
+   mode = (int(work[0]) * 512 + int(work[1]) * 64 +
+           int(work[2]) * 8 + int(work[3])) = 1005(01755)
+"""

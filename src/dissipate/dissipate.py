@@ -54,21 +54,21 @@ class Dissipate:
               os.path.exists('/usr/bin/apt-get')):
             self.installer = 'apt-get'
         else:
-            print "Unknown package system."
+            print("Unknown package system.")
             sys.exit(1)
 
     def do_install(self, packages, installer):
         # パッケージ名、繋がない方がいい？
         # os.system() があるけど、どの道 root で実行するので Escape は敢えてしない方針
-        print "\033[32m" + "=== Install Package section ===" + "\033[0m"
+        print("\033[32m" + "=== Install Package section ===" + "\033[0m")
         packages = ' '.join(packages)
         install = installer + " -y install " + packages
-        print "=== " + install + " ==="
+        print("=== " + install + " ===")
         os.system(install)
 
     def do_command(self, command):
         # os.system() があるけど、どの道 root で実行するので Escape は敢えてしない方針
-        print "\n" + "\033[32m" + "=== Exec command section ===" + "\033[0m"
+        print("\n" + "\033[32m" + "=== Exec command section ===" + "\033[0m")
         for cmd in command:
             print "=== " + cmd
             os.system(cmd)
@@ -94,7 +94,7 @@ class Dissipate:
                       + "\033[0m")
 
     def do_config(self, config):
-        print "\n" + "\033[32m" + "=== Create config section ===" + "\033[0m"
+        print("\n" + "\033[32m" + "=== Create config section ===" + "\033[0m")
 
         for x in config:
             # Check param: dir, file, template
@@ -129,15 +129,15 @@ class Dissipate:
 
             of.close()
 
-            print "\n-------------------------------------"
-            print "File: " + fpath
-            print "Template: " + config[x]['template']
+            print("\n%s" % ("-" * 37))
+            print("File: %s" % fpath)
+            print("Template: %s" % config[x]['template'])
 
             if 'user' in config[x]:
-                print "User: " + str(config[x]['user'])
+                print("User: %s" % str(config[x]['user']))
 
             if 'group' in config[x]:
-                print "Group: " + str(config[x]['group'])
+                print("Group: %s" % str(config[x]['group']))
 
             # (FIXME) Set mode
             pat = re.compile(r'[1-7]?[0-7]{3}')
@@ -192,7 +192,7 @@ class Dissipate:
             self.set_permission(fpath, uid, gid, mode)
 
     def do_action(self, name, param):
-        print "\033[32m" + "##### " + name + " ######" + "\033[0m"
+        print("\033[32m" + "##### " + name + " ######" + "\033[0m")
 
         if param.get('install') and self.installer:
             self.do_install(param['install'], self.installer)
@@ -210,9 +210,9 @@ if __name__ == '__main__':
     filename = args.c
     try:
         policy = yaml.safe_load(file(filename, 'r').read().decode('utf8'))
-        print yaml.safe_dump(policy, encoding='utf8', allow_unicode=True)
+        print(yaml.safe_dump(policy, encoding='utf8', allow_unicode=True))
     except IOError:
-        print "\033[31m" + "Policy file not found." + "\033[0m"
+        print("\033[31m" + "Policy file not found." + "\033[0m")
         sys.exit(1)
 
     if args.f:
@@ -232,7 +232,7 @@ if __name__ == '__main__':
             item.append(x)
             item.sort()
     except AttributeError:
-        print "\033[31m" + "Error: Please check YAML format." + "\033[0m"
+        print("\033[31m" + "Error: Please check YAML format." + "\033[0m")
         sys.exit(1)
 
     action = Dissipate()

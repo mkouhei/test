@@ -1,0 +1,24 @@
+001_ntp:
+  install:
+    - ntp
+  config:
+    ntp.conf:
+      dir: /etc
+      file: ntp.conf
+      template: example/ntp.conf.tmpl
+      attr:
+        SERVER1: ntp1.jst.mfeed.ad.jp
+        SERVER2: ntp2.jst.mfeed.ad.jp
+        SERVER3: ntp3.jst.mfeed.ad.jp
+      user: root
+      group: root
+      mode: 400
+  command:
+    - "restorecon -v /etc/ntp.conf"
+    - "ls -Zl /etc/ntp.conf"
+    - systemctl restart ntpd.service
+    - "ntpq -p"
+002_httpd:
+  install:
+  config:
+  command:
